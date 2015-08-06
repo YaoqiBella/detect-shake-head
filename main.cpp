@@ -1,8 +1,12 @@
-#include "opencv2/highgui/highgui.hpp"
 #include <iostream>
+#include "opencv2/opencv.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "animation.h"
+#include "detector.h"
 
 using namespace cv;
 using namespace std;
+
 
 int main(int argc, char* argv[])
 {
@@ -22,11 +26,20 @@ int main(int argc, char* argv[])
 
   namedWindow("MyVideo",CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
 
+  int frameRate = 35;
+
+  int i = 0;
+  ArrowAnimator arrowAnimator(frameRate);
+  Detector detector(5);
+  Mat frame;
   while (1)
   {
-    Mat frame;
+    i++;
 
     bool bSuccess = cap.read(frame); // read a new frame from video
+    Size s = frame.size();
+    Mat grayFrame(s.height, s.width, CV_8UC1);
+    cvtColor(frame, grayFrame, CV_BGR2GRAY);
 
     if (!bSuccess) //if not success, break loop
     {
@@ -34,9 +47,17 @@ int main(int argc, char* argv[])
       break;
     }
 
-    imshow("MyVideo", frame); //show the frame in "MyVideo" window
+    detector.addFrame(grayFrame);
+    Mat res(s.height, s.width, CV_8UC1);
+    res.setTo(Scalar(0));
+    detector.detectMotion(res);
+    imshow("MyVideo", res); //show the frame in "MyVideo" window
 
-    if (waitKey(30) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
+    // arrowAnimator.addAnimateStartFromNow(0.5, UP);
+    // arrowAnimator.playFrame(res, true);
+
+
+    if (waitKey(1000 / frameRate) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
     {
       cout << "esc key is pressed by user" << endl;
       break; 

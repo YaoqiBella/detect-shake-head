@@ -1,3 +1,4 @@
+#include <cmath>
 #include "detector.h"
 
 void Detector::addFrame(const cv::Mat& frame) {
@@ -7,6 +8,22 @@ void Detector::addFrame(const cv::Mat& frame) {
   }
 }
 
+
+Direction Detector::classifyObjectPosition(cv::Mat& frame, const double threshold) {
+  cv::Size s = frame.size();
+  cv::Mat leftMat = frame(cv::Range::all(), cv::Range(s.width / 2, s.width));
+  cv::Mat rightMat = frame(cv::Range::all(), cv::Range(0, s.width / 2));
+  double leftSum = cv::sum(leftMat).val[0];
+  double rightSum = cv::sum(rightMat).val[0];
+  // Normalize the lightness.
+  double totalSum = leftSum + rightSum;
+  leftSum /= totalSum;
+  rightSum /= totalSum;
+  if (std::abs(leftSum - rightSum) < threshold) {
+    return INVALID;
+  }
+  return leftSum > rightSum ? LEFT : RIGHT;
+}
 
 Direction Detector::detectMotion(cv::Mat& sum) {
   if (buffer_.size() != bufferSize_) {
@@ -23,5 +40,6 @@ Direction Detector::detectMotion(cv::Mat& sum) {
     pre = *li;
     ++li;
   }
-  return INVALID;
+  return classifyObjectPosition(sum, 0.2);
+  // return INVALID;
 }

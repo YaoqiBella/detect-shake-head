@@ -50,11 +50,13 @@ int main(int argc, char* argv[])
     detector.addFrame(grayFrame);
     Mat res(s.height, s.width, CV_8UC1);
     res.setTo(Scalar(0));
-    detector.detectMotion(res);
-    imshow("MyVideo", res); //show the frame in "MyVideo" window
+    Direction direction = detector.detectMotion(res);
+    arrowAnimator.addAnimateStartFromNow(0.5, direction);
+    Mat flippedFrame;
+    flip(frame, flippedFrame, 1);
+    arrowAnimator.playFrame(flippedFrame, true);
+    // imshow("MyVideo", res); //show the frame in "MyVideo" window
 
-    // arrowAnimator.addAnimateStartFromNow(0.5, UP);
-    // arrowAnimator.playFrame(res, true);
 
 
     if (waitKey(1000 / frameRate) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop

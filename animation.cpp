@@ -75,7 +75,7 @@ void ArrowAnimator::animateArrow(Mat& img, const Direction moveTo, const double 
       centerY = (1 - degree) * s.height;
       break;
     default:
-      cout << "unknown direction";
+      // cout << "unknown direction";
       return;
   }
 

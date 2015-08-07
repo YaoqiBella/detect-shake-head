@@ -40,6 +40,6 @@ Direction Detector::detectMotion(cv::Mat& sum) {
     pre = *li;
     ++li;
   }
-  return classifyObjectPosition(sum, 0.2);
-  // return INVALID;
+  seqAnalyzer_.addValue(classifyObjectPosition(sum, 0.2));
+  return seqAnalyzer_.detectMovingDirection(1);
 }

@@ -26,6 +26,7 @@ protected:
 class ArrowAnimator : public Animator{
 public:
   ArrowAnimator(int frameRate) : Animator(frameRate) {
+    moveTo_ = INVALID;
   }
 
   static void drawArrow(Mat& img, const Direction direction, const Point& center);

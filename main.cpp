@@ -51,7 +51,9 @@ int main(int argc, char* argv[])
     Mat res(s.height, s.width, CV_8UC1);
     res.setTo(Scalar(0));
     Direction direction = detector.detectMotion(res);
-    arrowAnimator.addAnimateStartFromNow(0.5, direction);
+    if (direction != INVALID) {
+      arrowAnimator.addAnimateStartFromNow(0.5, direction);
+    }
     Mat flippedFrame;
     flip(frame, flippedFrame, 1);
     arrowAnimator.playFrame(flippedFrame, true);

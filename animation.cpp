@@ -12,14 +12,13 @@ bool Animator::addAnimateStartFromNow(double duration) {
 
 
 void Animator::playFrame(Mat& img, bool show) {
-  if (currentFrameNum_ >= totalFrameNum_) {
-    return;
+  if (currentFrameNum_ <= totalFrameNum_) {
+    animate(img, currentFrameNum_ * 1.0 / totalFrameNum_);
+    ++currentFrameNum_;
   }
-  animate(img, currentFrameNum_ * 1.0 / totalFrameNum_);
   if (show) {
     imshow("MyVideo", img); //show the frame in "MyVideo" window
   }
-  ++currentFrameNum_;
 }
 
 void ArrowAnimator::drawArrow(Mat& img, const Direction direction, const Point& center) {

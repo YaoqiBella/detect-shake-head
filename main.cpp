@@ -30,9 +30,16 @@ int main(int argc, char* argv[])
 
   int i = 0;
   ArrowAnimator arrowAnimator(frameRate);
-  MotionDetector detector(5, 2, 1.2);
-  HandMovementAnalyzer handMovementAnalyzer;
+  int lowGranularityGridWidth = 2;
+  MotionDetector detectorLowGranularity(3, lowGranularityGridWidth, 1.2);
+  HandMovementAnalyzer handMovementAnalyzer(lowGranularityGridWidth);
+
+  int highGranularityGridWidth = 4;
+  MotionDetector detectorHighGranularity(3, highGranularityGridWidth, 1.7);
+  HeadMovementAnalyzer headMovementAnalyzer(highGranularityGridWidth);
   Mat frame;
+
+  bool enableHandDetection = true, enableHeadDetection = true;
   while (1)
   {
     i++;
@@ -48,15 +55,34 @@ int main(int argc, char* argv[])
       break;
     }
 
-    detector.addFrame(grayFrame);
-    Mat foreground(s.height, s.width, CV_8UC1);
-    foreground.setTo(Scalar(0));
-    Position position = detector.detect(foreground);
-    handMovementAnalyzer.addValue(position);
-    Direction direction  = handMovementAnalyzer.detectMovingDirection(1);
-    if (direction != INVALID) {
-      arrowAnimator.addAnimateStartFromNow(0.1, direction);
+    // Hand movement detection.
+    Direction handDirection = INVALID;
+    if (enableHandDetection) {
+      detectorLowGranularity.addFrame(grayFrame);
+      Mat foregroundLowGranularity(s.height, s.width, CV_8UC1);
+      foregroundLowGranularity.setTo(Scalar(0));
+      Position handPosition = detectorLowGranularity.detect(foregroundLowGranularity);
+      handMovementAnalyzer.addValue(handPosition);
+      handDirection  = handMovementAnalyzer.detectMovingDirection(0.99);
+      if (handDirection != INVALID) {
+        arrowAnimator.addAnimateStartFromNow(0.3, handDirection, CV_RGB(255, 0, 0));
+      }
     }
+
+    // Head movement detection.
+    if (enableHeadDetection) {
+      detectorHighGranularity.addFrame(grayFrame);
+      Mat foregroundHighGranularity(s.height, s.width, CV_8UC1);
+      foregroundHighGranularity.setTo(Scalar(0));
+      Position headPosition = detectorHighGranularity.detect(foregroundHighGranularity);
+      headMovementAnalyzer.addValue(headPosition);
+      Direction headDirection  = headMovementAnalyzer.detectMovingDirection(0.4);
+      if (handDirection == INVALID && headDirection != INVALID) {
+        arrowAnimator.addAnimateStartFromNow(0.3, headDirection, CV_RGB(0, 0, 255));
+      }
+
+    }
+   
     Mat flippedFrame;
     flip(frame, flippedFrame, 1);
     arrowAnimator.playFrame(flippedFrame, true);

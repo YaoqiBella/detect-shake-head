@@ -9,6 +9,8 @@ enum Direction {
   UP = 3,
 };
 
+typedef int Position;
+typedef std::vector<Position>::iterator PositionIter;
 
 #endif // COMMON_H
 

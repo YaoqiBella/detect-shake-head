@@ -5,26 +5,34 @@
 #include <iostream>
 
 #include "common.h"
-typedef int Position;
 
 class SequenceAnalyzer {
 public:
-  SequenceAnalyzer(int bufferSize) {
-    bufferSize_ = bufferSize;
-  }
-  void addValue(const Position& value);
-  virtual Direction detectMovingDirection(int threshold) = 0;
+  SequenceAnalyzer(int bufferSize, int gridWidth);
+  void addValue(Position value);
+  virtual Direction detectMovingDirection(double threshold) = 0;
+  double calPositionMean(const PositionIter& start, 
+                         const PositionIter& end);
 
 protected:
   std::list<int> buffer_;
   int bufferSize_;
+  int gridWidth_;
+  int invalidCount_;
 };
 
 class HandMovementAnalyzer : public SequenceAnalyzer {
 public:
-  HandMovementAnalyzer() : SequenceAnalyzer(2) {}
-  Direction detectMovingDirection(int threshold);
+  HandMovementAnalyzer(int gridWidth);
+  Direction detectMovingDirection(double  threshold);
 };
+
+class HeadMovementAnalyzer : public SequenceAnalyzer {
+public:
+  HeadMovementAnalyzer(int gridWidth);
+  Direction detectMovingDirection(double tolerance);
+};
+
 
 typedef int Position;
 

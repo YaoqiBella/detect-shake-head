@@ -2,44 +2,86 @@
 #include <vector>
 #include "detector.h"
 
-void SequenceAnalyzer::addValue(const Position& value) {
+SequenceAnalyzer::SequenceAnalyzer(int bufferSize, int gridWidth) {
+  bufferSize_ = bufferSize;
+  gridWidth_ = gridWidth;
+  invalidCount_ = 0;
+}
+
+
+void SequenceAnalyzer::addValue(Position value) {
   if (value < 0) {
+    ++invalidCount_;
     return;
   }
+  invalidCount_ = 0;
   buffer_.push_back(value);
   if (buffer_.size() > bufferSize_) {
     buffer_.pop_front();
   }
 }
 
-
-Direction HandMovementAnalyzer::detectMovingDirection(int threshold) {
-  std::list<int>::iterator li = buffer_.begin();
-  int pre = *li, cur;
-  ++li;
-  int leftVote = 0;
-  int rightVote = 0;
-  while (li != buffer_.end()) {
-    cur = *li;
-    std::cout << "pre: " << pre << " cur: " << cur << std::endl;
-    if (pre < cur) {
-      ++rightVote;
-    } else if (pre > cur) {
-      ++leftVote;
-    }
-    pre = cur;
+double SequenceAnalyzer::calPositionMean(const PositionIter& start, 
+                                             const PositionIter& end) {
+  PositionIter li = start;
+  int count = 0;
+  double sum = 0;
+  while (li != end) {
+    sum += *li;
+    ++count;
     ++li;
   }
-  std::cout << "leftVote: " << leftVote 
-    << " rightVote: " << rightVote << std::endl;
-  if (leftVote < rightVote) {
-    return RIGHT;
-  } else if (leftVote == rightVote) {
+  return sum / count;
+}
+
+HandMovementAnalyzer::HandMovementAnalyzer(int gridWidth) : SequenceAnalyzer(4, gridWidth) {}
+
+Direction HandMovementAnalyzer::detectMovingDirection(double tolerance) {
+  std::vector<Position> seq(buffer_.begin(), buffer_.end());
+  int N = seq.size();
+  std::cout << "invalidCount_: " << invalidCount_ << std::endl;
+  if (N < 2 || invalidCount_ > 10) {
     return INVALID;
-  } else {
+  }
+  
+  double mean0 = calPositionMean(seq.begin(), seq.begin() + N / 2);
+  double mean1 = calPositionMean(seq.begin() + N / 2, seq.begin() + N);
+  std::cout << "mean0: " << mean0 << " mean1: " << mean1 << std::endl;
+  if (mean1 > mean0 + tolerance) {
+    return RIGHT;
+  }
+  if (mean1 < mean0 - tolerance) {
     return LEFT;
   }
+  return INVALID;
+
 }
+
+
+HeadMovementAnalyzer::HeadMovementAnalyzer(int gridWidth) : SequenceAnalyzer(12, gridWidth) {
+}
+
+
+
+Direction HeadMovementAnalyzer::detectMovingDirection(double tolerance) {
+  std::vector<Position> seq(buffer_.begin(), buffer_.end());
+  int N = seq.size();
+  if (N < 3 || invalidCount_ > 10) {
+    return INVALID;
+  }
+  
+  double mean0 = calPositionMean(seq.begin(), seq.begin() + N / 3);
+  double mean1 = calPositionMean(seq.begin() + N / 3, seq.begin() + N / 3 * 2);
+  double mean2 = calPositionMean(seq.begin() + N / 3 * 2, seq.begin() + N);
+  if (mean1 > mean0 + tolerance && mean1 > mean2 + tolerance) {
+    return RIGHT;
+  }
+  if (mean1 < mean0 - tolerance && mean1 < mean2 - tolerance) {
+    return LEFT;
+  }
+  return INVALID;
+}
+
 
 
 void MotionDetector::addFrame(const cv::Mat& frame) {
@@ -86,10 +128,9 @@ Position MotionDetector::identifyObjectPosition(cv::Mat& frame, const int gridWi
     }
     sumLight += lightness[i];
   }
-  // std::cout << "maxLight: " << maxLight << std::endl;
-  // std::cout << "sumLight: " << sumLight << std::endl;
   std::cout << "maxLight / sumLight: " << maxLight / sumLight;
   std::cout << "maxLightRegion: " << maxLightRegion<< std::endl;
+  std::cout<< "threshold / gridWidth: " <<  threshold / gridWidth << std::endl;
   if (maxLight / sumLight  <  threshold / gridWidth) {
     return -1;
   }

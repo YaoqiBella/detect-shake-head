@@ -29,11 +29,16 @@ public:
     moveTo_ = INVALID;
   }
 
-  static void drawArrow(Mat& img, const Direction direction, const Point& center);
-  static void animateArrow(Mat& img, const Direction moveTo, const double degree);
+  static void drawArrow(Mat& img, const Direction direction, const Point& center, cv::Scalar color);
+  void animateArrow(Mat& img, const Direction moveTo, const double degree);
 
-  bool addAnimateStartFromNow(double duration, const Direction moveTo) {
+  bool addAnimateStartFromNow(double duration, const Direction moveTo, cv::Scalar color) {
+    if (currentFrameNum_ < totalFrameNum_) {
+      return false;
+    }
+
     moveTo_ = moveTo;
+    color_ = color;
     return Animator::addAnimateStartFromNow(duration);
   }
 
@@ -42,6 +47,7 @@ public:
   }
 protected:
   Direction moveTo_;
+  cv::Scalar color_;
 };
 
 #endif // ANIMATION_H

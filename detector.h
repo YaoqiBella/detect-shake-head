@@ -12,17 +12,7 @@ public:
   SequenceAnalyzer(int bufferSize) {
     bufferSize_ = bufferSize;
   }
-
-  void addValue(const Position& value) {
-    if (value < 0) {
-      return;
-    }
-    buffer_.push_back(value);
-    if (buffer_.size() > bufferSize_) {
-      buffer_.pop_front();
-    }
-  }
-
+  void addValue(const Position& value);
   virtual Direction detectMovingDirection(int threshold) = 0;
 
 protected:
@@ -33,35 +23,7 @@ protected:
 class HandMovementAnalyzer : public SequenceAnalyzer {
 public:
   HandMovementAnalyzer() : SequenceAnalyzer(2) {}
-  Direction detectMovingDirection(int threshold) {
-    std::list<int>::iterator li = buffer_.begin();
-    int pre = *li, cur;
-    ++li;
-    int leftVote = 0;
-    int rightVote = 0;
-    while (li != buffer_.end()) {
-      cur = *li;
-      std::cout << "pre: " << pre << " cur: " << cur << std::endl;
-      if (pre < cur) {
-        ++rightVote;
-      } else if (pre > cur) {
-        ++leftVote;
-      }
-      pre = cur;
-      ++li;
-    }
-    std::cout << "leftVote: " << leftVote 
-              << " rightVote: " << rightVote << std::endl;
-    if (leftVote < rightVote) {
-      return RIGHT;
-    } else if (leftVote == rightVote) {
-      return INVALID;
-    } else {
-      return LEFT;
-    }
-  }
-
-
+  Direction detectMovingDirection(int threshold);
 };
 
 typedef int Position;

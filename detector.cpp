@@ -1,4 +1,5 @@
 #include <cmath>
+#include <vector>
 #include "detector.h"
 
 void Detector::addFrame(const cv::Mat& frame) {
@@ -9,20 +10,33 @@ void Detector::addFrame(const cv::Mat& frame) {
 }
 
 
-Direction Detector::classifyObjectPosition(cv::Mat& frame, const double threshold) {
+int Detector::classifyObjectPosition(cv::Mat& frame, const double threshold) {
+  int regionNumber = 2;
   cv::Size s = frame.size();
-  cv::Mat leftMat = frame(cv::Range::all(), cv::Range(s.width / 2, s.width));
-  cv::Mat rightMat = frame(cv::Range::all(), cv::Range(0, s.width / 2));
-  double leftSum = cv::sum(leftMat).val[0];
-  double rightSum = cv::sum(rightMat).val[0];
-  // Normalize the lightness.
-  double totalSum = leftSum + rightSum;
-  leftSum /= totalSum;
-  rightSum /= totalSum;
-  if (std::abs(leftSum - rightSum) < threshold) {
-    return INVALID;
+  std::vector<double> lightness(6, 0);
+  int regionWidth = s.width / regionNumber;
+
+  double maxLight = -1, sumLight = 0;
+  int maxLightRegion = -1;
+  for (int i = 0; i < regionNumber; ++i) {
+    cv::Mat regionMat = frame(cv::Range::all(), 
+                              cv::Range((regionNumber - i - 1) * regionWidth, 
+                                        (regionNumber - i) * regionWidth));
+    lightness[i] = cv::sum(regionMat).val[0];
+    if (lightness[i] > maxLight) {
+      maxLight = lightness[i];
+      maxLightRegion = i;
+    }
+    sumLight += lightness[i];
   }
-  return leftSum > rightSum ? LEFT : RIGHT;
+  // std::cout << "maxLight: " << maxLight << std::endl;
+  // std::cout << "sumLight: " << sumLight << std::endl;
+  std::cout << "maxLight / sumLight: " << maxLight / sumLight;
+  std::cout << "maxLightRegion: " << maxLightRegion<< std::endl;
+  if (maxLight / sumLight  < threshold) {
+    return -1;
+  }
+  return maxLightRegion;
 }
 
 Direction Detector::detectMotion(cv::Mat& sum) {
@@ -40,6 +54,8 @@ Direction Detector::detectMotion(cv::Mat& sum) {
     pre = *li;
     ++li;
   }
-  seqAnalyzer_.addValue(classifyObjectPosition(sum, 0.2));
+  int position = classifyObjectPosition(sum, 0.7);
+  std::cout << "position: " << position << std::endl;
+  seqAnalyzer_.addValue(position);
   return seqAnalyzer_.detectMovingDirection(1);
 }

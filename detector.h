@@ -12,7 +12,11 @@ public:
     bufferSize_ = bufferSize;
   }
 
-  void addValue(const Direction& value) {
+  void addValue(const int& value) {
+    if (value == -1) {
+      return;
+    }
+
     buffer_.push_back(value);
     if (buffer_.size() > bufferSize_) {
       buffer_.pop_front();
@@ -23,40 +27,44 @@ public:
   // }
 
   Direction detectMovingDirection(int threshold) {
-    std::list<Direction>::iterator li = buffer_.begin();
-    Direction pre = *li;
+    std::list<int>::iterator li = buffer_.begin();
+    int pre = *li, cur;
     ++li;
     int leftVote = 0;
     int rightVote = 0;
     while (li != buffer_.end()) {
-      Direction cur = *li;
-      if (pre == LEFT && cur == RIGHT) {
+      cur = *li;
+      if (pre < cur) {
         ++rightVote;
-      } else if (pre == RIGHT && cur == LEFT) {
+      } else if (pre > cur) {
         ++leftVote;
       }
+      pre = cur;
       ++li;
-    }
-    if (leftVote <= threshold && rightVote <= threshold) {
-      return INVALID;
     }
     std::cout << "leftVote: " << leftVote << std::endl;
     std::cout << "rightVote: " << rightVote << std::endl;
+    // if (leftVote <= threshold && rightVote <= threshold) {
+    //   return INVALID;
+    // }
+    if (leftVote == rightVote) {
+      return INVALID;
+    }
     return leftVote > rightVote ? LEFT : RIGHT;
   }
 
 protected:
-  std::list<Direction> buffer_;
+  std::list<int> buffer_;
   int bufferSize_;
 };
 
 class Detector {
 public:
-  Detector(int bufferSize) : seqAnalyzer_(bufferSize) {
+  Detector(int bufferSize) : seqAnalyzer_(3) {
     bufferSize_ = bufferSize;
   }
 
-  Direction classifyObjectPosition(cv::Mat& frame, const double threshold);
+  int classifyObjectPosition(cv::Mat& frame, const double threshold);
   Direction detectMotion(cv::Mat& sum);
 
   void addFrame(const cv::Mat& frame);

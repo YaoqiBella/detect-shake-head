@@ -52,7 +52,7 @@ void ArrowAnimator::drawArrow(Mat& img, const Direction direction, const Point& 
 
   // Point center = Point(s.width / 2, s.height / 2);
   arrowedLine(img, center + arrowDirection*0.5, center + arrowDirection,
-      CV_RGB(255, angle, 0), thickness, lineType, 0, tipLength);
+      CV_RGB(255, 255, 255), thickness, lineType, 0, tipLength);
 
 }
 

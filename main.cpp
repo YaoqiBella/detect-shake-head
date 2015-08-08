@@ -55,11 +55,9 @@ int main(int argc, char* argv[])
       arrowAnimator.addAnimateStartFromNow(0.5, direction);
     }
     Mat flippedFrame;
-    flip(frame, flippedFrame, 1);
+    flip(res, flippedFrame, 1);
     arrowAnimator.playFrame(flippedFrame, true);
     // imshow("MyVideo", res); //show the frame in "MyVideo" window
-
-
 
     if (waitKey(1000 / frameRate) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
     {

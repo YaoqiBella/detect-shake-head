@@ -23,7 +23,7 @@ void Animator::playFrame(Mat& img, bool show) {
 
 void ArrowAnimator::drawArrow(Mat& img, const Direction direction, const Point& center) {
   Size s = img.size();
-  int length = 150;
+  int length = 350;
   int thickness = 10;
   int lineType = 0;
   double tipLength = 0.5;

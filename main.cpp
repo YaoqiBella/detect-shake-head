@@ -30,7 +30,8 @@ int main(int argc, char* argv[])
 
   int i = 0;
   ArrowAnimator arrowAnimator(frameRate);
-  Detector detector(5);
+  MotionDetector detector(5, 2, 1.2);
+  HandMovementAnalyzer handMovementAnalyzer;
   Mat frame;
   while (1)
   {
@@ -48,14 +49,16 @@ int main(int argc, char* argv[])
     }
 
     detector.addFrame(grayFrame);
-    Mat res(s.height, s.width, CV_8UC1);
-    res.setTo(Scalar(0));
-    Direction direction = detector.detectMotion(res);
+    Mat foreground(s.height, s.width, CV_8UC1);
+    foreground.setTo(Scalar(0));
+    Position position = detector.detect(foreground);
+    handMovementAnalyzer.addValue(position);
+    Direction direction  = handMovementAnalyzer.detectMovingDirection(1);
     if (direction != INVALID) {
-      arrowAnimator.addAnimateStartFromNow(0.2, direction);
+      arrowAnimator.addAnimateStartFromNow(0.1, direction);
     }
     Mat flippedFrame;
-    flip(res, flippedFrame, 1);
+    flip(frame, flippedFrame, 1);
     arrowAnimator.playFrame(flippedFrame, true);
     // imshow("MyVideo", res); //show the frame in "MyVideo" window
 

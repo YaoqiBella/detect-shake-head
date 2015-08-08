@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "common.h"
+typedef int Position;
 
 class SequenceAnalyzer {
 public:
@@ -12,20 +13,26 @@ public:
     bufferSize_ = bufferSize;
   }
 
-  void addValue(const int& value) {
-    if (value == -1) {
+  void addValue(const Position& value) {
+    if (value < 0) {
       return;
     }
-
     buffer_.push_back(value);
     if (buffer_.size() > bufferSize_) {
       buffer_.pop_front();
     }
   }
 
-  // void majorityVote(const std::list<Direction>& window) {
-  // }
+  virtual Direction detectMovingDirection(int threshold) = 0;
 
+protected:
+  std::list<int> buffer_;
+  int bufferSize_;
+};
+
+class HandMovementAnalyzer : public SequenceAnalyzer {
+public:
+  HandMovementAnalyzer() : SequenceAnalyzer(2) {}
   Direction detectMovingDirection(int threshold) {
     std::list<int>::iterator li = buffer_.begin();
     int pre = *li, cur;
@@ -34,6 +41,7 @@ public:
     int rightVote = 0;
     while (li != buffer_.end()) {
       cur = *li;
+      std::cout << "pre: " << pre << " cur: " << cur << std::endl;
       if (pre < cur) {
         ++rightVote;
       } else if (pre > cur) {
@@ -42,36 +50,43 @@ public:
       pre = cur;
       ++li;
     }
-    std::cout << "leftVote: " << leftVote << std::endl;
-    std::cout << "rightVote: " << rightVote << std::endl;
-    // if (leftVote <= threshold && rightVote <= threshold) {
-    //   return INVALID;
-    // }
-    if (leftVote == rightVote) {
+    std::cout << "leftVote: " << leftVote 
+              << " rightVote: " << rightVote << std::endl;
+    if (leftVote < rightVote) {
+      return RIGHT;
+    } else if (leftVote == rightVote) {
       return INVALID;
+    } else {
+      return LEFT;
     }
-    return leftVote > rightVote ? LEFT : RIGHT;
   }
 
-protected:
-  std::list<int> buffer_;
-  int bufferSize_;
+
 };
 
-class Detector {
+typedef int Position;
+
+class MotionDetector {
 public:
-  Detector(int bufferSize) : seqAnalyzer_(3) {
+  MotionDetector(int bufferSize, int gridWidth, double motionThreshold) {
     bufferSize_ = bufferSize;
+    gridWidth_ = gridWidth;
+    motionThreshold_ = motionThreshold;
   }
 
-  int classifyObjectPosition(cv::Mat& frame, const int regionNumber, const double threshold);
-  Direction detectMotion(cv::Mat& sum);
+  Position identifyObjectPosition(cv::Mat& frame, 
+                             const int regionNumber,
+                             const double threshold);
+  bool extractForeground(cv::Mat& sum);
+  Position detect(cv::Mat& foreground);
 
   void addFrame(const cv::Mat& frame);
 protected:
   std::list<cv::Mat> buffer_;
   int bufferSize_;
-  SequenceAnalyzer seqAnalyzer_;
+  int gridWidth_;
+  double motionThreshold_;
 };
+
 
 #endif // DETECTOR_H

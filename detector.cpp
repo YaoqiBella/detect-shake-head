@@ -10,8 +10,7 @@ void Detector::addFrame(const cv::Mat& frame) {
 }
 
 
-int Detector::classifyObjectPosition(cv::Mat& frame, const double threshold) {
-  int regionNumber = 2;
+int Detector::classifyObjectPosition(cv::Mat& frame, const int regionNumber, const double threshold) {
   cv::Size s = frame.size();
   std::vector<double> lightness(6, 0);
   int regionWidth = s.width / regionNumber;
@@ -33,7 +32,7 @@ int Detector::classifyObjectPosition(cv::Mat& frame, const double threshold) {
   // std::cout << "sumLight: " << sumLight << std::endl;
   std::cout << "maxLight / sumLight: " << maxLight / sumLight;
   std::cout << "maxLightRegion: " << maxLightRegion<< std::endl;
-  if (maxLight / sumLight  < threshold) {
+  if (maxLight / sumLight  <  threshold / regionNumber) {
     return -1;
   }
   return maxLightRegion;
@@ -54,7 +53,7 @@ Direction Detector::detectMotion(cv::Mat& sum) {
     pre = *li;
     ++li;
   }
-  int position = classifyObjectPosition(sum, 0.7);
+  int position = classifyObjectPosition(sum, 5, 1.5);
   std::cout << "position: " << position << std::endl;
   seqAnalyzer_.addValue(position);
   return seqAnalyzer_.detectMovingDirection(1);

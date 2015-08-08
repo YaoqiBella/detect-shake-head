@@ -64,7 +64,7 @@ public:
     bufferSize_ = bufferSize;
   }
 
-  int classifyObjectPosition(cv::Mat& frame, const double threshold);
+  int classifyObjectPosition(cv::Mat& frame, const int regionNumber, const double threshold);
   Direction detectMotion(cv::Mat& sum);
 
   void addFrame(const cv::Mat& frame);

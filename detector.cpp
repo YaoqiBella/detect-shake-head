@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cmath>
 #include <vector>
 #include "detector.h"
@@ -34,10 +35,28 @@ double SequenceAnalyzer::calPositionMean(const PositionIter& start,
   return sum / count;
 }
 
-HandMovementAnalyzer::HandMovementAnalyzer(int gridWidth) : SequenceAnalyzer(2, gridWidth) {}
+HandMovementAnalyzer::HandMovementAnalyzer(int gridWidth) : SequenceAnalyzer(6, gridWidth) {}
+
+
+int HandMovementAnalyzer::codeCorrection(std::vector<Position>& seq) {
+  int N = seq.size();
+  if (N < 3) {
+    return 0 ;
+  }
+  int count = 0;
+  for (int i = 1; i < N-1; ++i) {
+    if (seq[i-1] == seq[i+1] && seq[i] != seq[i-1]) {
+      seq[i] = seq[i-1];
+      ++count;
+    }
+  }
+  return count;
+}
 
 Direction HandMovementAnalyzer::detectMovingDirection(double tolerance) {
   std::vector<Position> seq(buffer_.begin(), buffer_.end());
+  int correctCount = codeCorrection(seq);
+  std::cout << "correctCount: " << correctCount << std::endl;
   int N = seq.size();
   std::cout << "invalidCount_: " << invalidCount_ << std::endl;
   if (N < 2 || invalidCount_ > 3) {
@@ -105,7 +124,7 @@ bool MotionDetector::extractEdge(cv::Mat frame, cv::Mat& edge) {
   return true;
 }
 
-Position MotionDetector::identifyObjectPosition2(cv::Mat& frame, const int gridWidth, const double threshold) {
+Position MotionDetector::identifyObjectPosition(cv::Mat& frame, const int gridWidth, const double threshold) {
   cv::Size s = frame.size();
   double yPosition = 0;
   int count = 0;
@@ -128,13 +147,14 @@ Position MotionDetector::identifyObjectPosition2(cv::Mat& frame, const int gridW
   return yReigionNumber;
 }
 
-Position MotionDetector::identifyObjectPosition(cv::Mat& frame, const int gridWidth, const double threshold) {
+Position MotionDetector::identifyObjectPositionWithMotionDiff(cv::Mat& frame, const int gridWidth, const double threshold) {
   cv::Size s = frame.size();
   std::vector<double> lightness(gridWidth, 0);
   int regionWidth = s.width / gridWidth_;
 
   double maxLight = -1, sumLight = 0;
   int maxLightRegion = -1;
+  std::cout << "run in identifier" << std::endl;
   for (int i = 0; i < gridWidth; ++i) {
     cv::Mat regionMat = frame(cv::Range::all(), 
                               cv::Range((gridWidth - i - 1) * regionWidth, 
@@ -160,8 +180,37 @@ Position MotionDetector::detect(cv::Mat& res) {
   cv::Mat foreground(frameSize.height, frameSize.width, CV_8UC1);
   foreground.setTo(cv::Scalar(0));
   extractForeground(foreground);
+
   cv::Mat edge;
   extractEdge(buffer_.back(), edge);
+
   cv::bitwise_and(foreground, edge, res);
-  return identifyObjectPosition2(res, gridWidth_, motionThreshold_);
+
+  std::vector<int> vote(2, 0);
+  Position p1 = identifyObjectPosition(res, gridWidth_, motionThreshold_);
+  assert(p1 < 2);
+  if (p1 >= 0) {
+    vote[p1]++;
+  }
+
+  Position p2 = identifyObjectPosition(edge, gridWidth_, motionThreshold_);
+  assert(p2 < 2);
+  if (p2 >= 0) {
+    vote[p2]++;
+  }
+
+  Position p3 = identifyObjectPositionWithMotionDiff(foreground, gridWidth_, 1.3);
+  assert(p3 < 2);
+  if (p3 >= 0) {
+    vote[p3]++;
+  }
+  std::cout << "p1: " << p1 << " p2: " << p2 << " p3: " << p3 << std::endl;
+
+  if (vote[0] == vote[1]) {
+    return -1;
+  } else if (vote[0] < vote[1]) {
+    return 1;
+  } else {
+    return 0;
+  }
 }

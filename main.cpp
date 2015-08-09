@@ -31,10 +31,9 @@ int main(int argc, char* argv[])
   int i = 0;
   ArrowAnimator arrowAnimator(frameRate);
   int gridWidth = 2;
-  MotionDetector motionDetector(5, gridWidth, 1.1);
+  MotionDetector motionDetector(5, gridWidth, 20);
   HandMovementAnalyzer handMovementAnalyzer(gridWidth);
 
-  bool enableHandDetection = true, enableHeadDetection = false;
   cv::Mat frame;
   while (1)
   {
@@ -54,22 +53,21 @@ int main(int argc, char* argv[])
     // Hand movement detection.
     Direction handDirection = INVALID;
     Mat movingEdge;
-    if (enableHandDetection) {
-      motionDetector.addFrame(grayFrame, 0.4);
-      Position handPosition = motionDetector.detect(movingEdge);
-      handMovementAnalyzer.addValue(handPosition);
-      handDirection  = handMovementAnalyzer.detectMovingDirection(0.9);
-      if (handDirection != INVALID) {
-        // arrowAnimator.addAnimateStartFromNow(0.3, handDirection, CV_RGB(255, 0, 0));
-        arrowAnimator.addAnimateStartFromNow(0.2, handDirection, CV_RGB(255, 255, 255));
-      }
+
+    motionDetector.addFrame(grayFrame, 0.4);
+    Position handPosition = motionDetector.detect(movingEdge);
+    handMovementAnalyzer.addValue(handPosition);
+    handDirection  = handMovementAnalyzer.detectMovingDirection(0.7);
+    if (handDirection != INVALID) {
+      // arrowAnimator.addAnimateStartFromNow(0.3, handDirection, CV_RGB(255, 0, 0));
+      arrowAnimator.addAnimateStartFromNow(0.2, handDirection, CV_RGB(255, 255, 255));
     }
 
   
     Mat flippedFrame;
     // flip(movingEdge, flippedFrame, 1);
     // flip(movingEdge, flippedFrame, 1);
-    flip(movingEdge, flippedFrame, 1);
+    flip(frame, flippedFrame, 1);
     arrowAnimator.playFrame(flippedFrame, true);
     // imshow("MyVideo", res); //show the frame in "MyVideo" window
 

@@ -25,6 +25,7 @@ class HandMovementAnalyzer : public SequenceAnalyzer {
 public:
   HandMovementAnalyzer(int gridWidth);
   Direction detectMovingDirection(double  threshold);
+  int codeCorrection(std::vector<Position>& seq);
 };
 
 typedef int Position;
@@ -41,9 +42,10 @@ public:
                              const int regionNumber,
                              const double threshold);
 
-  Position identifyObjectPosition2(cv::Mat& frame, 
-                             const int regionNumber,
-                             const double threshold);
+  Position identifyObjectPositionWithMotionDiff(cv::Mat& frame, const
+                                                int gridWidth, 
+                                                const double threshold);
+
   bool extractForeground(cv::Mat& sum);
   bool extractEdge(cv::Mat frame, cv::Mat& sum);
   Position detect(cv::Mat& foreground);

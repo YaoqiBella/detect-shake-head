@@ -30,16 +30,12 @@ int main(int argc, char* argv[])
 
   int i = 0;
   ArrowAnimator arrowAnimator(frameRate);
-  int lowGranularityGridWidth = 2;
-  MotionDetector detectorLowGranularity(5, lowGranularityGridWidth, 1.1);
-  HandMovementAnalyzer handMovementAnalyzer(lowGranularityGridWidth);
+  int gridWidth = 2;
+  MotionDetector motionDetector(5, gridWidth, 1.1);
+  HandMovementAnalyzer handMovementAnalyzer(gridWidth);
 
-  int highGranularityGridWidth = 3;
-  MotionDetector detectorHighGranularity(5, highGranularityGridWidth, 1.2);
-  HeadMovementAnalyzer headMovementAnalyzer(highGranularityGridWidth);
-  Mat frame;
-
-  bool enableHandDetection = true, enableHeadDetection = true;
+  bool enableHandDetection = true, enableHeadDetection = false;
+  cv::Mat frame;
   while (1)
   {
     i++;
@@ -57,36 +53,23 @@ int main(int argc, char* argv[])
 
     // Hand movement detection.
     Direction handDirection = INVALID;
-    Mat foregroundLowGranularity(s.height, s.width, CV_8UC1);
+    Mat movingEdge;
     if (enableHandDetection) {
-      detectorLowGranularity.addFrame(grayFrame, "BORDER");
-      foregroundLowGranularity.setTo(Scalar(0));
-      Position handPosition = detectorLowGranularity.detect(foregroundLowGranularity);
+      motionDetector.addFrame(grayFrame, 0.4);
+      Position handPosition = motionDetector.detect(movingEdge);
       handMovementAnalyzer.addValue(handPosition);
-      handDirection  = handMovementAnalyzer.detectMovingDirection(0.7);
+      handDirection  = handMovementAnalyzer.detectMovingDirection(0.9);
       if (handDirection != INVALID) {
-        arrowAnimator.addAnimateStartFromNow(0.3, handDirection, CV_RGB(255, 0, 0));
-        // arrowAnimator.addAnimateStartFromNow(0.2, handDirection, CV_RGB(255, 255, 255));
+        // arrowAnimator.addAnimateStartFromNow(0.3, handDirection, CV_RGB(255, 0, 0));
+        arrowAnimator.addAnimateStartFromNow(0.2, handDirection, CV_RGB(255, 255, 255));
       }
     }
 
-    // Head movement detection.
-    Mat foregroundHighGranularity(s.height, s.width, CV_8UC1);
-    if (enableHeadDetection) {
-      detectorHighGranularity.addFrame(grayFrame, "CENTER");
-      foregroundHighGranularity.setTo(Scalar(0));
-      Position headPosition = detectorHighGranularity.detect(foregroundHighGranularity);
-      headMovementAnalyzer.addValue(headPosition);
-      Direction headDirection  = headMovementAnalyzer.detectMovingDirection(0.2);
-      if (handDirection == INVALID && headDirection != INVALID) {
-        arrowAnimator.addAnimateStartFromNow(0.3, headDirection, CV_RGB(0, 0, 255));
-        // arrowAnimator.addAnimateStartFromNow(0.3, headDirection, CV_RGB(255, 255, 255));
-      }
-
-    }
-   
+  
     Mat flippedFrame;
-    flip(frame, flippedFrame, 1);
+    // flip(movingEdge, flippedFrame, 1);
+    // flip(movingEdge, flippedFrame, 1);
+    flip(movingEdge, flippedFrame, 1);
     arrowAnimator.playFrame(flippedFrame, true);
     // imshow("MyVideo", res); //show the frame in "MyVideo" window
 

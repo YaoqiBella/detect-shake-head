@@ -27,13 +27,6 @@ public:
   Direction detectMovingDirection(double  threshold);
 };
 
-class HeadMovementAnalyzer : public SequenceAnalyzer {
-public:
-  HeadMovementAnalyzer(int gridWidth);
-  Direction detectMovingDirection(double tolerance);
-};
-
-
 typedef int Position;
 
 class MotionDetector {
@@ -47,10 +40,15 @@ public:
   Position identifyObjectPosition(cv::Mat& frame, 
                              const int regionNumber,
                              const double threshold);
+
+  Position identifyObjectPosition2(cv::Mat& frame, 
+                             const int regionNumber,
+                             const double threshold);
   bool extractForeground(cv::Mat& sum);
+  bool extractEdge(cv::Mat frame, cv::Mat& sum);
   Position detect(cv::Mat& foreground);
 
-  void addFrame(const cv::Mat& frame, const std::string& truncateType = "ALL");
+  void addFrame(const cv::Mat& frame, const float borderPercent = 0.5);
 protected:
   std::list<cv::Mat> buffer_;
   int bufferSize_;

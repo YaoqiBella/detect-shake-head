@@ -40,7 +40,7 @@ Direction HandMovementAnalyzer::detectMovingDirection(double tolerance) {
   std::vector<Position> seq(buffer_.begin(), buffer_.end());
   int N = seq.size();
   std::cout << "invalidCount_: " << invalidCount_ << std::endl;
-  if (N < 2 || invalidCount_ > 10) {
+  if (N < 2 || invalidCount_ > 3) {
     return INVALID;
   }
   
@@ -61,8 +61,6 @@ Direction HandMovementAnalyzer::detectMovingDirection(double tolerance) {
 HeadMovementAnalyzer::HeadMovementAnalyzer(int gridWidth) : SequenceAnalyzer(12, gridWidth) {
 }
 
-
-
 Direction HeadMovementAnalyzer::detectMovingDirection(double tolerance) {
   std::vector<Position> seq(buffer_.begin(), buffer_.end());
   int N = seq.size();
@@ -73,6 +71,7 @@ Direction HeadMovementAnalyzer::detectMovingDirection(double tolerance) {
   double mean0 = calPositionMean(seq.begin(), seq.begin() + N / 3);
   double mean1 = calPositionMean(seq.begin() + N / 3, seq.begin() + N / 3 * 2);
   double mean2 = calPositionMean(seq.begin() + N / 3 * 2, seq.begin() + N);
+  std::cout << "mean0: " << mean0 << " mean1: " << mean1 << " mean2: " << mean2 << std::endl;
   if (mean1 > mean0 + tolerance && mean1 > mean2 + tolerance) {
     return RIGHT;
   }
@@ -83,8 +82,22 @@ Direction HeadMovementAnalyzer::detectMovingDirection(double tolerance) {
 }
 
 
-
-void MotionDetector::addFrame(const cv::Mat& frame) {
+void MotionDetector::addFrame(const cv::Mat& frame, const std::string& truncateType) {
+  cv::Mat realFrame;
+  cv::Size s = frame.size();
+  int w = s.width / 4;
+  if (truncateType == "CENTER") {
+    realFrame = frame(cv::Range::all(), cv::Range(w * 1, w * 3));
+  } else if (truncateType == "BORDER") {
+    cv::hconcat(frame(cv::Range::all(), cv::Range(0, w)),
+                frame(cv::Range::all(), cv::Range(3 * w, 4 * w)),
+                realFrame);
+  } else if (truncateType == "ALL") {
+    realFrame = frame;
+  } else {
+    std::cout << "unknown truncated type! " << std::endl;
+    return;
+  }
   buffer_.push_back(frame);
   if (buffer_.size() > bufferSize_) {
     buffer_.pop_front();
@@ -112,7 +125,7 @@ bool MotionDetector::extractForeground(cv::Mat& sum) {
 
 Position MotionDetector::identifyObjectPosition(cv::Mat& frame, const int gridWidth, const double threshold) {
   cv::Size s = frame.size();
-  std::vector<double> lightness(6, 0);
+  std::vector<double> lightness(gridWidth, 0);
   int regionWidth = s.width / gridWidth_;
 
   double maxLight = -1, sumLight = 0;
@@ -140,7 +153,4 @@ Position MotionDetector::identifyObjectPosition(cv::Mat& frame, const int gridWi
 Position MotionDetector::detect(cv::Mat& foreground) {
   extractForeground(foreground);
   return identifyObjectPosition(foreground, gridWidth_, motionThreshold_);
-  // std::cout << "position: " << position << std::endl;
-  // seqAnalyzer_.addValue(position);
-  // return seqAnalyzer_.detectMovingDirection(1);
 }

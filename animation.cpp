@@ -13,10 +13,15 @@ bool Animator::addAnimateStartFromNow(double duration) {
 
 
 void Animator::playFrame(Mat& img, bool show) {
-  if (currentFrameNum_ <= totalFrameNum_) {
+  if (currentFrameNum_ < totalFrameNum_) {
     animate(img, currentFrameNum_ * 1.0 / totalFrameNum_);
     ++currentFrameNum_;
+  } else {
+    // Animation has finished;
+    currentFrameNum_ = 0;
+    totalFrameNum_ = 0;
   }
+
   if (show) {
     imshow("MyVideo", img); //show the frame in "MyVideo" window
   }

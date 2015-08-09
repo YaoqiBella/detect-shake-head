@@ -31,11 +31,11 @@ int main(int argc, char* argv[])
   int i = 0;
   ArrowAnimator arrowAnimator(frameRate);
   int lowGranularityGridWidth = 2;
-  MotionDetector detectorLowGranularity(3, lowGranularityGridWidth, 1.2);
+  MotionDetector detectorLowGranularity(5, lowGranularityGridWidth, 1.1);
   HandMovementAnalyzer handMovementAnalyzer(lowGranularityGridWidth);
 
-  int highGranularityGridWidth = 4;
-  MotionDetector detectorHighGranularity(3, highGranularityGridWidth, 1.7);
+  int highGranularityGridWidth = 3;
+  MotionDetector detectorHighGranularity(5, highGranularityGridWidth, 1.2);
   HeadMovementAnalyzer headMovementAnalyzer(highGranularityGridWidth);
   Mat frame;
 
@@ -57,28 +57,30 @@ int main(int argc, char* argv[])
 
     // Hand movement detection.
     Direction handDirection = INVALID;
+    Mat foregroundLowGranularity(s.height, s.width, CV_8UC1);
     if (enableHandDetection) {
-      detectorLowGranularity.addFrame(grayFrame);
-      Mat foregroundLowGranularity(s.height, s.width, CV_8UC1);
+      detectorLowGranularity.addFrame(grayFrame, "BORDER");
       foregroundLowGranularity.setTo(Scalar(0));
       Position handPosition = detectorLowGranularity.detect(foregroundLowGranularity);
       handMovementAnalyzer.addValue(handPosition);
-      handDirection  = handMovementAnalyzer.detectMovingDirection(0.99);
+      handDirection  = handMovementAnalyzer.detectMovingDirection(0.7);
       if (handDirection != INVALID) {
         arrowAnimator.addAnimateStartFromNow(0.3, handDirection, CV_RGB(255, 0, 0));
+        // arrowAnimator.addAnimateStartFromNow(0.2, handDirection, CV_RGB(255, 255, 255));
       }
     }
 
     // Head movement detection.
+    Mat foregroundHighGranularity(s.height, s.width, CV_8UC1);
     if (enableHeadDetection) {
-      detectorHighGranularity.addFrame(grayFrame);
-      Mat foregroundHighGranularity(s.height, s.width, CV_8UC1);
+      detectorHighGranularity.addFrame(grayFrame, "CENTER");
       foregroundHighGranularity.setTo(Scalar(0));
       Position headPosition = detectorHighGranularity.detect(foregroundHighGranularity);
       headMovementAnalyzer.addValue(headPosition);
-      Direction headDirection  = headMovementAnalyzer.detectMovingDirection(0.4);
+      Direction headDirection  = headMovementAnalyzer.detectMovingDirection(0.2);
       if (handDirection == INVALID && headDirection != INVALID) {
         arrowAnimator.addAnimateStartFromNow(0.3, headDirection, CV_RGB(0, 0, 255));
+        // arrowAnimator.addAnimateStartFromNow(0.3, headDirection, CV_RGB(255, 255, 255));
       }
 
     }

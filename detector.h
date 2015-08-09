@@ -50,7 +50,7 @@ public:
   bool extractForeground(cv::Mat& sum);
   Position detect(cv::Mat& foreground);
 
-  void addFrame(const cv::Mat& frame);
+  void addFrame(const cv::Mat& frame, const std::string& truncateType = "ALL");
 protected:
   std::list<cv::Mat> buffer_;
   int bufferSize_;

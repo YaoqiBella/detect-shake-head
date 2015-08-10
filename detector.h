@@ -32,19 +32,25 @@ typedef int Position;
 
 class MotionDetector {
 public:
-  MotionDetector(int bufferSize, int gridWidth, double motionThreshold) {
+  MotionDetector(int bufferSize, std::vector<double> gridWidth, double motionThreshold) : 
+    gridSepPos_(gridWidth.size() + 1, 0) {
+
     bufferSize_ = bufferSize;
     gridWidth_ = gridWidth;
     motionThreshold_ = motionThreshold;
+
+    // calculate the position of the border of to adjcent grids.
+    for (int i = 1; i < gridWidth_.size() + 1; ++i) {
+      gridSepPos_[i] = gridSepPos_[i-1] + gridWidth_[i-1];
+    }
   }
 
   Position identifyObjectPosition(cv::Mat& frame, 
-                             const int regionNumber,
                              const double threshold);
 
-  Position identifyObjectPositionWithMotionDiff(cv::Mat& frame, const
-                                                int gridWidth, 
+  Position identifyObjectPositionWithMotionDiff(cv::Mat& frame, 
                                                 const double threshold);
+  Position majorityVote(Position p1, Position p2, Position p3);
 
   bool extractForeground(cv::Mat& sum);
   bool extractEdge(cv::Mat frame, cv::Mat& sum);
@@ -54,7 +60,8 @@ public:
 protected:
   std::list<cv::Mat> buffer_;
   int bufferSize_;
-  int gridWidth_;
+  std::vector<double> gridWidth_;
+  std::vector<double> gridSepPos_;
   double motionThreshold_;
 };
 

@@ -11,6 +11,7 @@ enum Direction {
 
 typedef int Position;
 typedef std::vector<Position>::iterator PositionIter;
+typedef std::vector<cv::Mat>::iterator MatIter;
 
 #endif // COMMON_H
 

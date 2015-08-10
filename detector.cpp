@@ -107,16 +107,17 @@ void MotionDetector::addFrame(const cv::Mat& frame, const float borderPercent) {
 }
 
 
-bool MotionDetector::extractForeground(cv::Mat& sum) {
+
+bool MotionDetector::extractForeground(MatIter start, MatIter end, cv::Mat& sum) {
   if (buffer_.size() != bufferSize_) {
     std::cout << "unknown buffer_ size! " << std::endl;
     return false;
   }
   cv::Mat d, pre, cur;
-  std::list<cv::Mat>::iterator li = buffer_.begin();
+  MatIter li = start;
   pre = *li;
   ++li;
-  while (li != buffer_.end()) {
+  while (li != end) {
     cur = *li;
     cv::absdiff(pre, cur, d);
     cv::add(sum, d, sum);
@@ -201,24 +202,16 @@ Position MotionDetector::identifyObjectPositionWithMotionDiff(cv::Mat& frame,
 }
 
 
-Position MotionDetector::majorityVote(Position p1, Position p2, Position p3) {
+Position MotionDetector::majorityVote(std::vector<Position> votes) {
   int gridWidthLen = gridWidth_.size();
   std::vector<int> vote(gridWidthLen, 0);
-  assert(p1 < gridWidthLen);
-  if (p1 >= 0) {
-    vote[p1]++;
+  for (int i = 0; i < votes.size(); ++i) {
+    Position v = votes[i];
+    assert(v < gridWidthLen);
+    if (v >= 0) {
+      vote[v]++;
+    }
   }
-
-  assert(p2 < gridWidthLen);
-  if (p2 >= 0) {
-    vote[p2]++;
-  }
-
-  assert(p3 < gridWidthLen);
-  if (p3 >= 0) {
-    vote[p3]++;
-  }
-
   int maxVote = 0, maxVotePosition = -1;
   for (int i = 0; i < gridWidthLen; ++i) {
     if (vote[i] > maxVote) {
@@ -227,7 +220,7 @@ Position MotionDetector::majorityVote(Position p1, Position p2, Position p3) {
     }
   }
 
-  return maxVote < 2 ? -1 : maxVotePosition;
+  return maxVote < (votes.size() + 1) / 2 ? -1 : maxVotePosition;
 
   // int maxVotePositionCount = 0;
   // for (int i = 0; i < gridWidthLen; ++i) {
@@ -247,31 +240,44 @@ Position MotionDetector::detect(cv::Mat& res) {
   int N = buffer.size();
   cv::Size frameSize = buffer[N-1].size();
 
-  // Method1: identify region using frame difference and edge detection.
+  std::vector<Position> votes;
+  Position p;
+
+  // Method: identify region using three frame difference of detected edges.
   cv::Mat foreground(frameSize.height, frameSize.width, CV_8UC1);
   foreground.setTo(cv::Scalar(0));
-  extractForeground(foreground);
+  extractForeground(buffer.end() - 4, buffer.end(), foreground);
 
   cv::Mat edge;
   extractEdge(buffer[N-1], edge);
 
-  cv::bitwise_and(foreground, edge, res);
-  Position p1 = identifyObjectPosition(res, motionThreshold_);
+  cv::Mat motionDiff1;
+  cv::bitwise_and(foreground, edge, motionDiff1);
+  p = identifyObjectPosition(motionDiff1, motionThreshold_);
+  votes.push_back(p);
 
-  // Method1: identify region using difference of detected edges.
-  cv::Mat edgeLast, edgeDiff;
-  if (N <= 1) {
-    edgeDiff = edge;
-  } else {
-    extractEdge(buffer[N-2], edgeLast);
-    cv::bitwise_xor(edge, edgeLast, edgeDiff);
+  // Method: identify region using sum of multiple frame difference and
+  // edge detection.
+  cv::Mat foreground2(frameSize.height, frameSize.width, CV_8UC1);
+  foreground2.setTo(cv::Scalar(0));
+  extractForeground(buffer.begin(), buffer.end(), foreground2);
+
+  cv::Mat motionDiff2;
+  cv::bitwise_and(foreground2, edge, motionDiff2);
+  p = identifyObjectPosition(motionDiff2, motionThreshold_);
+  votes.push_back(p);
+
+  res = motionDiff2;
+
+  // Method: identify region using only frame difference.
+  p = identifyObjectPositionWithMotionDiff(foreground, 1.2);
+  votes.push_back(p);
+  Position voteReuslt = majorityVote(votes);
+
+  std::cout << "reuslt: ";
+  for (int i = 0; i < votes.size(); ++i) {
+    std::cout << " " << votes[i];
   }
-  Position p2 = identifyObjectPosition(edgeDiff, motionThreshold_);
-  res = edgeDiff;
-
-  // Method 3: identify region using only frame difference.
-  Position p3 = identifyObjectPositionWithMotionDiff(foreground, 1.2);
-  Position voteReuslt = majorityVote(p1, p2, p3);
-  std::cout << "p1: " << p1 << " p2: " << p2 << " p3: " << p3 << " vote result: " << voteReuslt << std::endl;
+  std::cout << " vote result: " << voteReuslt << std::endl;
   return voteReuslt;
 }

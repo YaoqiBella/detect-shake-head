@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
   ArrowAnimator arrowAnimator(frameRate);
   double gridWidthArr[] = {0.4, 0.2, 0.4};
   int gridWidthLen = sizeof(gridWidthArr) / sizeof(double);
-  MotionDetector motionDetector(5, vector<double>(gridWidthArr, gridWidthArr + gridWidthLen), 20);
+  MotionDetector motionDetector(8, vector<double>(gridWidthArr, gridWidthArr + gridWidthLen), 20);
   HandMovementAnalyzer handMovementAnalyzer(gridWidthLen);
 
   cv::Mat frame;

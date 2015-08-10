@@ -50,9 +50,10 @@ public:
 
   Position identifyObjectPositionWithMotionDiff(cv::Mat& frame, 
                                                 const double threshold);
-  Position majorityVote(Position p1, Position p2, Position p3);
+  Position majorityVote(std::vector<Position> votes);
 
-  bool extractForeground(cv::Mat& sum);
+
+  bool extractForeground(MatIter start, MatIter end, cv::Mat& sum);
   bool extractEdge(cv::Mat frame, cv::Mat& sum);
   Position detect(cv::Mat& foreground);
 

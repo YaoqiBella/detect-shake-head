@@ -10,7 +10,7 @@ typedef int Position;
 // Class that detects the position of moving object. 
 //
 // It divides the
-// x-axis to several regions (i.e., dividing the screen to a 1xN grid).
+// horizontal-axis to several regions (i.e., dividing the screen to a 1xN grid).
 // The class only reports which regions the moving object is in. Several
 // methods are applied and then the result is returned through majority
 // vote. For each method, there are two steps:
@@ -113,7 +113,7 @@ protected:
 // Constructor Arguments:
 //   bufferSize: int, the number of positions used for detecting
 //   command.
-//   gridWidth: int, the # of grids in x direction.
+//   gridWidth: int, the # of grids in horizontal direction.
 class SequenceAnalyzer {
 public:
   SequenceAnalyzer(int bufferSize, int gridWidth);

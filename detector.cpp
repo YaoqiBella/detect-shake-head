@@ -85,7 +85,7 @@ MotionDetector::MotionDetector(int bufferSize, std::vector<double> gridWidth) : 
   bufferSize_ = bufferSize;
   gridWidth_ = gridWidth;
 
-  // Calculate the position of the x-direction border of grid.
+  // Calculate the position of the horizonntal direction border of grid.
   for (int i = 1; i < gridWidth_.size() + 1; ++i) {
     gridSepPos_[i] = gridSepPos_[i-1] + gridWidth_[i-1];
   }

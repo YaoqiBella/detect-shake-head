@@ -53,8 +53,8 @@ int main(int argc, char* argv[])
     }
 
     motionDetector.addFrame(grayFrame);
-    Position handPosition = motionDetector.detect();
-    sequenceAnalyzer.addValue(handPosition);
+    Position objPos = motionDetector.detect();
+    sequenceAnalyzer.addValue(objPos);
     Command cmd = sequenceAnalyzer.detectCommand(0.2);
     if (cmd != INVALID) {
       arrowAnimator.addAnimateStartFromNow(0.2, cmd, CV_RGB(255, 255, 255));

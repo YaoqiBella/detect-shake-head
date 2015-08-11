@@ -62,9 +62,7 @@ bool approxEqual(const double val, const double target, const double tolerance) 
 Direction HandMovementAnalyzer::detectMovingDirection(double tolerance) {
   std::vector<Position> seq(buffer_.begin(), buffer_.end());
   int correctCount = codeCorrection(seq);
-  std::cout << "correctCount: " << correctCount << std::endl;
   int N = seq.size();
-  std::cout << "invalidCount_: " << invalidCount_ << std::endl;
   if (N < 2 || invalidCount_ > 3) {
     return INVALID;
   }
@@ -82,15 +80,6 @@ Direction HandMovementAnalyzer::detectMovingDirection(double tolerance) {
     return LEFT;
   }
   return INVALID;
-  // std::cout << "mean0: " << mean0 << " mean1: " << mean1 << std::endl;
-  // if (mean1 > mean0 + tolerance) {
-  //   return RIGHT;
-  // }
-  // if (mean1 < mean0 - tolerance) {
-  //   return LEFT;
-  // }
-  // return INVALID;
-
 }
 
 void MotionDetector::addFrame(const cv::Mat& frame, const float borderPercent) {
@@ -110,7 +99,7 @@ void MotionDetector::addFrame(const cv::Mat& frame, const float borderPercent) {
 
 bool MotionDetector::extractForeground(MatIter start, MatIter end, cv::Mat& sum) {
   if (buffer_.size() != bufferSize_) {
-    std::cout << "unknown buffer_ size! " << std::endl;
+    // std::cout << "unknown buffer_ size! " << std::endl;
     return false;
   }
   cv::Mat d, pre, cur;
@@ -134,11 +123,8 @@ bool MotionDetector::extractEdge(cv::Mat frame, cv::Mat& edge) {
   // Reduce noise with a kernel 3x3
   cv::blur(frame, edge, cv::Size(kernelSize, kernelSize));
 
-  std::cout << "run here" << std::endl;
   // Canny detector
   cv::Canny(edge, edge, lowThreshold, lowThreshold * ratio, kernelSize);
-  std::cout << "run here 2" << std::endl;
-
   return true;
 }
 
@@ -154,17 +140,10 @@ Position MotionDetector::identifyObjectPosition(cv::Mat& frame, const double thr
       }
     }
   }
-  // for (int i = 0; i < gridSepPos_.size(); ++i) {
-  //   std::cout << " " << gridSepPos_[i] << std::endl;
-  // }
-  // std::cout << std::endl;
   yPosition /= count;
   double yPositionNormalized = yPosition / s.width;
   int yRegionNumber = std::upper_bound(gridSepPos_.begin(), gridSepPos_.end(), yPositionNormalized) - gridSepPos_.begin();
   yRegionNumber = gridWidth_.size() - yRegionNumber;
-  std::cout << "count: " << count << " threshold: " << threshold
-            << " yPosition: " << yPosition
-            << "region: " << yRegionNumber << std::endl;
   if (count < threshold) {
     return -1;
   }
@@ -192,9 +171,6 @@ Position MotionDetector::identifyObjectPositionWithMotionDiff(cv::Mat& frame,
     }
     sumLight += lightness[i];
   }
-  std::cout << "maxLight / sumLight: " << maxLight / sumLight;
-  std::cout << "maxLightRegion: " << maxLightRegion<< std::endl;
-  std::cout<< "threshold / gridWidth: " <<  threshold / gridWidthLen << std::endl;
   if (maxLight / sumLight  <  threshold / gridWidthLen) {
     return -1;
   }
@@ -221,18 +197,6 @@ Position MotionDetector::majorityVote(std::vector<Position> votes) {
   }
 
   return maxVote < (votes.size() + 1) / 2 ? -1 : maxVotePosition;
-
-  // int maxVotePositionCount = 0;
-  // for (int i = 0; i < gridWidthLen; ++i) {
-  //   if (vote[i] == maxVote) {
-  //     ++maxVotePositionCount;
-  //   }
-  // }
-  // if (maxVotePositionCount > 1) { // there is a draw
-  //   return -1;
-  // } else if (maxVote < 2){
-  //   return maxVotePosition;
-  // }
 }
 
 Position MotionDetector::detect(cv::Mat& res) {
@@ -274,10 +238,10 @@ Position MotionDetector::detect(cv::Mat& res) {
   votes.push_back(p);
   Position voteReuslt = majorityVote(votes);
 
-  std::cout << "reuslt: ";
-  for (int i = 0; i < votes.size(); ++i) {
-    std::cout << " " << votes[i];
-  }
-  std::cout << " vote result: " << voteReuslt << std::endl;
+  // std::cout << "reuslt: ";
+  // for (int i = 0; i < votes.size(); ++i) {
+  //   std::cout << " " << votes[i];
+  // }
+  // std::cout << " vote result: " << voteReuslt << std::endl;
   return voteReuslt;
 }

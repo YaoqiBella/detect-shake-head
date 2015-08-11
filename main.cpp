@@ -42,6 +42,7 @@ int main(int argc, char* argv[])
 
     bool bSuccess = cap.read(frame); // read a new frame from video
     Size s = frame.size();
+    // Preprocess the images.
     Mat grayFrame(s.height, s.width, CV_8UC1);
     cvtColor(frame, grayFrame, CV_BGR2GRAY);
 
@@ -60,17 +61,12 @@ int main(int argc, char* argv[])
     handMovementAnalyzer.addValue(handPosition);
     handDirection  = handMovementAnalyzer.detectMovingDirection(0.2);
     if (handDirection != INVALID) {
-      // arrowAnimator.addAnimateStartFromNow(0.3, handDirection, CV_RGB(255, 0, 0));
       arrowAnimator.addAnimateStartFromNow(0.2, handDirection, CV_RGB(255, 255, 255));
     }
-
   
     Mat flippedFrame;
-    // flip(movingEdge, flippedFrame, 1);
-    // flip(movingEdge, flippedFrame, 1);
     flip(frame, flippedFrame, 1);
     arrowAnimator.playFrame(flippedFrame, true);
-    // imshow("MyVideo", res); //show the frame in "MyVideo" window
 
     if (waitKey(1000 / frameRate) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
     {

@@ -3,7 +3,6 @@
 bool Animator::addAnimateStartFromNow(double duration) {
   if (currentFrameNum_ < totalFrameNum_) {
     // cannot start a new animation if old didn't finish
-    // std::cout << "cannot start a new animation if old didn't finish" << std::endl;
     return false;
   }
   totalFrameNum_ = duration * frameRate_;
@@ -56,7 +55,6 @@ void ArrowAnimator::drawArrow(Mat& img, const Direction direction, const Point& 
   double angleRad = angle * CV_PI / 180.0;
   Point arrowDirection = Point(length * cos(angleRad), length * sin(angleRad));
 
-  // Point center = Point(s.width / 2, s.height / 2);
   arrowedLine(img, center + arrowDirection*0.5, center + arrowDirection,
       color, thickness, lineType, 0, tipLength);
 
@@ -87,5 +85,3 @@ void ArrowAnimator::animateArrow(Mat& img, const Direction moveTo, const double 
   Point center = Point(centerX, centerY);
   drawArrow(img, moveTo, center, color_);
 }
-
-

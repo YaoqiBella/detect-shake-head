@@ -57,7 +57,7 @@ bool approxEqual(const double val, const double target, const double tolerance) 
   return std::abs(val - target) < tolerance;
 }
 
-Direction SequenceAnalyzer::detectMovingDirection(double tolerance) {
+Command SequenceAnalyzer::detectCommand(double tolerance) {
   std::vector<Position> seq(buffer_.begin(), buffer_.end());
   int correctCount = codeCorrection(seq);
   int N = seq.size();
@@ -80,20 +80,24 @@ Direction SequenceAnalyzer::detectMovingDirection(double tolerance) {
   return INVALID;
 }
 
-void MotionDetector::addFrame(const cv::Mat& frame, const float borderPercent) {
-  cv::Mat realFrame;
+
+MotionDetector::MotionDetector(int bufferSize, std::vector<double> gridWidth) : gridSepPos_(gridWidth.size() + 1, 0) {
+  bufferSize_ = bufferSize;
+  gridWidth_ = gridWidth;
+
+  // Calculate the position of the x-direction border of grid.
+  for (int i = 1; i < gridWidth_.size() + 1; ++i) {
+    gridSepPos_[i] = gridSepPos_[i-1] + gridWidth_[i-1];
+  }
+}
+
+void MotionDetector::addFrame(const cv::Mat& frame) {
   cv::Size s = frame.size();
-  int borderLength = (int) s.width * borderPercent;
-  cv::hconcat(frame(cv::Range::all(), cv::Range(0, borderLength)),
-      frame(cv::Range::all(), cv::Range(s.width - borderLength, s.width)),
-      realFrame);
-  buffer_.push_back(realFrame);
+  buffer_.push_back(frame);
   if (buffer_.size() > bufferSize_) {
     buffer_.pop_front();
   }
 }
-
-
 
 bool MotionDetector::extractForeground(MatIter start, MatIter end, cv::Mat& sum) {
   if (buffer_.size() != bufferSize_) {
@@ -126,7 +130,7 @@ bool MotionDetector::extractEdge(cv::Mat frame, cv::Mat& edge) {
   return true;
 }
 
-Position MotionDetector::identifyObjectPosition(cv::Mat& frame, const double threshold) {
+Position MotionDetector::identifyObjectPositionByCenterOfContour(cv::Mat& frame, const double threshold) {
   cv::Size s = frame.size();
   double yPosition = 0;
   int count = 0;
@@ -148,7 +152,7 @@ Position MotionDetector::identifyObjectPosition(cv::Mat& frame, const double thr
   return yRegionNumber;
 }
 
-Position MotionDetector::identifyObjectPositionWithMotionDiff(cv::Mat& frame, 
+Position MotionDetector::identifyObjectPositionByWithMotionStrength(cv::Mat& frame, 
                                                               const double threshold) {
   cv::Size s = frame.size();
   int gridWidthLen = gridWidth_.size();
@@ -197,7 +201,7 @@ Position MotionDetector::majorityVote(std::vector<Position> votes) {
   return maxVote < (votes.size() + 1) / 2 ? -1 : maxVotePosition;
 }
 
-Position MotionDetector::detect(cv::Mat& res) {
+Position MotionDetector::detect() {
   std::vector<cv::Mat> buffer(buffer_.begin(), buffer_.end());
   int N = buffer.size();
   cv::Size frameSize = buffer[N-1].size();
@@ -215,7 +219,7 @@ Position MotionDetector::detect(cv::Mat& res) {
 
   cv::Mat motionDiff1;
   cv::bitwise_and(foreground, edge, motionDiff1);
-  p = identifyObjectPosition(motionDiff1, motionThreshold_);
+  p = identifyObjectPositionByCenterOfContour(motionDiff1, 20);
   votes.push_back(p);
 
   // Method: identify region using sum of multiple frame difference and
@@ -226,13 +230,11 @@ Position MotionDetector::detect(cv::Mat& res) {
 
   cv::Mat motionDiff2;
   cv::bitwise_and(foreground2, edge, motionDiff2);
-  p = identifyObjectPosition(motionDiff2, motionThreshold_);
+  p = identifyObjectPositionByCenterOfContour(motionDiff2, 20);
   votes.push_back(p);
 
-  res = motionDiff2;
-
   // Method: identify region using only frame difference.
-  p = identifyObjectPositionWithMotionDiff(foreground, 1.2);
+  p = identifyObjectPositionByWithMotionStrength(foreground, 1.2);
   votes.push_back(p);
   Position voteReuslt = majorityVote(votes);
 

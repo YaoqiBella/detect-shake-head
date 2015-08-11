@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
   ArrowAnimator arrowAnimator(frameRate);
   double gridWidthArr[] = {0.4, 0.2, 0.4};
   int gridWidthLen = sizeof(gridWidthArr) / sizeof(double);
-  MotionDetector motionDetector(8, vector<double>(gridWidthArr, gridWidthArr + gridWidthLen), 20);
+  MotionDetector motionDetector(8, vector<double>(gridWidthArr, gridWidthArr + gridWidthLen));
   SequenceAnalyzer sequenceAnalyzer(4, gridWidthLen);
 
   cv::Mat frame;
@@ -52,16 +52,12 @@ int main(int argc, char* argv[])
       break;
     }
 
-    // Hand movement detection.
-    Direction handDirection = INVALID;
-    Mat movingEdge;
-
-    motionDetector.addFrame(grayFrame, 0.5);
-    Position handPosition = motionDetector.detect(movingEdge);
+    motionDetector.addFrame(grayFrame);
+    Position handPosition = motionDetector.detect();
     sequenceAnalyzer.addValue(handPosition);
-    handDirection  = sequenceAnalyzer.detectMovingDirection(0.2);
-    if (handDirection != INVALID) {
-      arrowAnimator.addAnimateStartFromNow(0.2, handDirection, CV_RGB(255, 255, 255));
+    Command cmd = sequenceAnalyzer.detectCommand(0.2);
+    if (cmd != INVALID) {
+      arrowAnimator.addAnimateStartFromNow(0.2, cmd, CV_RGB(255, 255, 255));
     }
   
     Mat flippedFrame;

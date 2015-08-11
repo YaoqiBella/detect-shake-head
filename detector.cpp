@@ -130,7 +130,7 @@ bool MotionDetector::extractEdge(cv::Mat frame, cv::Mat& edge) {
   return true;
 }
 
-Position MotionDetector::identifyObjectPositionByCenterOfContour(cv::Mat& frame, const double threshold) {
+Position MotionDetector::identifyObjectPositionByCenterOfMovingEdge(cv::Mat& frame, const double threshold) {
   cv::Size s = frame.size();
   double yPosition = 0;
   int count = 0;
@@ -156,27 +156,27 @@ Position MotionDetector::identifyObjectPositionByWithMotionStrength(cv::Mat& fra
                                                               const double threshold) {
   cv::Size s = frame.size();
   int gridWidthLen = gridWidth_.size();
-  std::vector<double> lightness(gridWidthLen, 0);
+  std::vector<double> strength(gridWidthLen, 0);
 
-  double maxLight = -1, sumLight = 0;
-  int maxLightRegion = -1;
+  double maxStrength = -1, sumStrength = 0;
+  int maxStrengthRegion = -1;
 
   for (int i = 0; i < gridWidthLen; ++i) {
     int yStart = (1 - gridSepPos_[i+1]) * s.width;
     int yEnd = (1 - gridSepPos_[i]) * s.width;
     cv::Mat regionMat = frame(cv::Range::all(), 
                               cv::Range(yStart, yEnd));
-    lightness[i] = cv::sum(regionMat).val[0];
-    if (lightness[i] > maxLight) {
-      maxLight = lightness[i];
-      maxLightRegion = i;
+    strength[i] = cv::sum(regionMat).val[0];
+    if (strength[i] > maxStrength) {
+      maxStrength = strength[i];
+      maxStrengthRegion = i;
     }
-    sumLight += lightness[i];
+    sumStrength += strength[i];
   }
-  if (maxLight / sumLight  <  threshold / gridWidthLen) {
+  if (maxStrength / sumStrength  <  threshold / gridWidthLen) {
     return -1;
   }
-  return maxLightRegion;
+  return maxStrengthRegion;
 }
 
 
@@ -219,7 +219,7 @@ Position MotionDetector::detect() {
 
   cv::Mat motionDiff1;
   cv::bitwise_and(foreground, edge, motionDiff1);
-  p = identifyObjectPositionByCenterOfContour(motionDiff1, 20);
+  p = identifyObjectPositionByCenterOfMovingEdge(motionDiff1, 20);
   votes.push_back(p);
 
   // Method: identify region using sum of multiple frame difference and
@@ -230,7 +230,7 @@ Position MotionDetector::detect() {
 
   cv::Mat motionDiff2;
   cv::bitwise_and(foreground2, edge, motionDiff2);
-  p = identifyObjectPositionByCenterOfContour(motionDiff2, 20);
+  p = identifyObjectPositionByCenterOfMovingEdge(motionDiff2, 20);
   votes.push_back(p);
 
   // Method: identify region using only frame difference.

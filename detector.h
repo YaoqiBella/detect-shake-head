@@ -26,8 +26,9 @@ class MotionDetector {
 public:
   MotionDetector(int bufferSize, std::vector<double> gridWidth);
 
-  // Identify the position of the moving object using the center of its
-  // contour.
+  // Identify the position of the moving object using the center of the
+  // detected moving edge.
+  // 
   //
   // Arguments:
   //   frame: cv::Mat, the input frame containing the image processing result.
@@ -35,9 +36,9 @@ public:
   //   should be returned.   
   // Returns:
   //   Estimated position. Returns the region that the center belongs to
-  //   if the # of points in the contour is >= min_point_in_contour, and
-  //   -1 otherwise.
-  Position identifyObjectPositionByCenterOfContour(cv::Mat& frame, const double min_point_in_contour);
+  //   if the # of points in the detected moving edge is >=
+  //   min_point_in_contour, and -1 otherwise.
+  Position identifyObjectPositionByCenterOfMovingEdge(cv::Mat& frame, const double min_point_in_contour);
 
   // Identify the position of the moving object using the strengh of
   // motion.

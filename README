@@ -16,12 +16,12 @@ For this step, a slide window is applied to the input frames. Several methods ar
 We quantized the horizontal axis as three regions. 
 
 | 40%      | 20%     | 40%     |
-|----------|----------|----------|
-|  0          |  1          |  2         |
+|----------|---------|---------|
+|  0       |  1      |  2      |
 
 The width of Region 0 is 40% of the screen length.
-The width of Region 1 is  20% of the screen length.
-The width of Region 3 is  40% of the screen length.
+The width of Region 1 is 20% of the screen length.
+The width of Region 3 is 40% of the screen length.
 
 
 ### Method 1
@@ -54,7 +54,7 @@ We know the following correspondence relationship of sequences and commands.
 - ...1 1 0 0... -> LEFT
 - ...1 1 2 2... -> RIGHT
 - ...0 0 2 2... -> RIGHT
-- ...2 2 0 0 --> LEFT
+- ...2 2 0 0... --> LEFT
 
 We first reduce the noise of the sequence, and then try to detect the pattern described above.
 

@@ -10,7 +10,8 @@ class SequenceAnalyzer {
 public:
   SequenceAnalyzer(int bufferSize, int gridWidth);
   void addValue(Position value);
-  virtual Direction detectMovingDirection(double threshold) = 0;
+  Direction detectMovingDirection(double  threshold);
+  int codeCorrection(std::vector<Position>& seq);
   double calPositionMean(const PositionIter& start, 
                          const PositionIter& end);
 
@@ -19,13 +20,6 @@ protected:
   int bufferSize_;
   int gridWidth_;
   int invalidCount_;
-};
-
-class HandMovementAnalyzer : public SequenceAnalyzer {
-public:
-  HandMovementAnalyzer(int gridWidth);
-  Direction detectMovingDirection(double  threshold);
-  int codeCorrection(std::vector<Position>& seq);
 };
 
 typedef int Position;

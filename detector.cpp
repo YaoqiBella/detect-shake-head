@@ -37,10 +37,8 @@ double SequenceAnalyzer::calPositionMean(const PositionIter& start,
   return sum / count;
 }
 
-HandMovementAnalyzer::HandMovementAnalyzer(int gridWidth) : SequenceAnalyzer(4, gridWidth) {}
 
-
-int HandMovementAnalyzer::codeCorrection(std::vector<Position>& seq) {
+int SequenceAnalyzer::codeCorrection(std::vector<Position>& seq) {
   int N = seq.size();
   if (N < 3) {
     return 0 ;
@@ -59,7 +57,7 @@ bool approxEqual(const double val, const double target, const double tolerance) 
   return std::abs(val - target) < tolerance;
 }
 
-Direction HandMovementAnalyzer::detectMovingDirection(double tolerance) {
+Direction SequenceAnalyzer::detectMovingDirection(double tolerance) {
   std::vector<Position> seq(buffer_.begin(), buffer_.end());
   int correctCount = codeCorrection(seq);
   int N = seq.size();

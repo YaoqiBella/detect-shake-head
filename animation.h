@@ -9,6 +9,7 @@ using namespace cv;
 using namespace std;
 
 
+// Animator class.
 class Animator {
 public:
   Animator(int frameRate) {
@@ -23,6 +24,7 @@ protected:
   int frameRate_;
 };
 
+// Class that animates arrows.
 class ArrowAnimator : public Animator{
 public:
   ArrowAnimator(int frameRate) : Animator(frameRate) {

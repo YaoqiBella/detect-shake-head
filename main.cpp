@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
   double gridWidthArr[] = {0.4, 0.2, 0.4};
   int gridWidthLen = sizeof(gridWidthArr) / sizeof(double);
   MotionDetector motionDetector(8, vector<double>(gridWidthArr, gridWidthArr + gridWidthLen), 20);
-  HandMovementAnalyzer handMovementAnalyzer(gridWidthLen);
+  SequenceAnalyzer sequenceAnalyzer(4, gridWidthLen);
 
   cv::Mat frame;
   while (1)
@@ -58,8 +58,8 @@ int main(int argc, char* argv[])
 
     motionDetector.addFrame(grayFrame, 0.5);
     Position handPosition = motionDetector.detect(movingEdge);
-    handMovementAnalyzer.addValue(handPosition);
-    handDirection  = handMovementAnalyzer.detectMovingDirection(0.2);
+    sequenceAnalyzer.addValue(handPosition);
+    handDirection  = sequenceAnalyzer.detectMovingDirection(0.2);
     if (handDirection != INVALID) {
       arrowAnimator.addAnimateStartFromNow(0.2, handDirection, CV_RGB(255, 255, 255));
     }
